@@ -1,0 +1,509 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>LibraFlow — Dashboard</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<style>
+  :root {
+    --ink: #0f1117;
+    --paper: #f7f4ef;
+    --cream: #ede8df;
+    --gold: #c9a84c;
+    --gold-light: #f5edda;
+    --text: #2a2a35;
+    --muted: #7a7a8a;
+    --border: #e0dbd2;
+    --white: #ffffff;
+    --danger: #c0392b;
+    --danger-bg: #fdf0ee;
+    --success: #1d7a4e;
+    --success-bg: #edf7f2;
+    --info: #1a5fa8;
+    --info-bg: #edf3fc;
+    --sidebar-w: 240px;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--paper);
+    color: var(--text);
+    display: flex;
+    min-height: 100vh;
+  }
+
+  /* SIDEBAR */
+  .sidebar {
+    width: var(--sidebar-w);
+    background: var(--ink);
+    display: flex;
+    flex-direction: column;
+    position: fixed;
+    top: 0; left: 0; bottom: 0;
+    z-index: 100;
+  }
+
+  .sidebar-brand {
+    padding: 28px 24px 20px;
+    border-bottom: 1px solid rgba(255,255,255,0.08);
+    display: flex; align-items: center; gap: 10px;
+  }
+
+  .brand-icon {
+    width: 34px; height: 34px;
+    background: var(--gold);
+    border-radius: 8px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 16px;
+  }
+
+  .brand-name {
+    font-family: 'DM Serif Display', serif;
+    color: white;
+    font-size: 18px;
+  }
+
+  .sidebar-nav {
+    padding: 20px 12px;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+
+  .nav-label {
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    color: rgba(255,255,255,0.28);
+    padding: 10px 12px 6px;
+  }
+
+  .nav-link {
+    display: flex; align-items: center; gap: 10px;
+    padding: 10px 12px;
+    border-radius: 8px;
+    color: rgba(255,255,255,0.55);
+    text-decoration: none;
+    font-size: 14px;
+    font-weight: 500;
+    transition: background 0.15s, color 0.15s;
+  }
+
+  .nav-link:hover { background: rgba(255,255,255,0.08); color: white; }
+  .nav-link.active { background: var(--gold); color: var(--ink); font-weight: 600; }
+
+  .nav-icon { font-size: 16px; width: 20px; text-align: center; }
+
+  .sidebar-footer {
+    padding: 16px 12px;
+    border-top: 1px solid rgba(255,255,255,0.08);
+  }
+
+  .nav-link.logout { color: rgba(255,100,100,0.7); }
+  .nav-link.logout:hover { background: rgba(192,57,43,0.15); color: #ff6b6b; }
+
+  /* MAIN */
+  .main {
+    margin-left: var(--sidebar-w);
+    flex: 1;
+    padding: 36px 40px;
+    max-width: calc(100vw - var(--sidebar-w));
+  }
+
+  .page-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 32px;
+  }
+
+  .page-title {
+    font-family: 'DM Serif Display', serif;
+    font-size: 32px;
+    color: var(--ink);
+    letter-spacing: -0.5px;
+  }
+
+  .page-sub {
+    color: var(--muted);
+    font-size: 14px;
+    margin-top: 4px;
+  }
+
+  /* STATS CARDS */
+  .stats-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 16px;
+    margin-bottom: 32px;
+  }
+
+  .stat-card {
+    background: var(--white);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 22px;
+  }
+
+  .stat-card-label {
+    font-size: 12px;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-bottom: 8px;
+  }
+
+  .stat-card-num {
+    font-family: 'DM Serif Display', serif;
+    font-size: 36px;
+    color: var(--ink);
+  }
+
+  .stat-card-icon {
+    font-size: 22px;
+    float: right;
+    margin-top: -4px;
+  }
+
+  /* SECTION */
+  .section {
+    background: var(--white);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    margin-bottom: 24px;
+    overflow: hidden;
+  }
+
+  .section-header {
+    padding: 20px 24px;
+    border-bottom: 1px solid var(--border);
+    display: flex; align-items: center; justify-content: space-between;
+  }
+
+  .section-title {
+    font-size: 15px; font-weight: 600; color: var(--ink);
+  }
+
+  /* FORMS */
+  .add-form {
+    padding: 20px 24px;
+    display: flex;
+    gap: 10px;
+    align-items: flex-end;
+    background: var(--paper);
+    border-bottom: 1px solid var(--border);
+    flex-wrap: wrap;
+  }
+
+  .field-group { display: flex; flex-direction: column; gap: 5px; }
+  .field-group label { font-size: 12px; font-weight: 500; color: var(--muted); }
+
+  .add-form input, .search-input {
+    padding: 9px 14px;
+    border: 1.5px solid var(--border);
+    border-radius: 8px;
+    background: var(--white);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 14px; color: var(--text);
+    transition: border-color 0.2s, box-shadow 0.2s; outline: none;
+  }
+
+  .add-form input:focus, .search-input:focus {
+    border-color: var(--gold); box-shadow: 0 0 0 3px rgba(201,168,76,0.12);
+  }
+
+  .search-bar {
+    padding: 16px 24px;
+    background: var(--paper);
+    border-bottom: 1px solid var(--border);
+    display: flex; gap: 8px;
+  }
+
+  .search-input { flex: 1; }
+
+  /* BUTTONS */
+  .btn {
+    padding: 9px 18px;
+    border-radius: 8px;
+    border: none;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 13px; font-weight: 600;
+    cursor: pointer;
+    text-decoration: none;
+    display: inline-flex; align-items: center; gap: 6px;
+    transition: all 0.15s;
+    white-space: nowrap;
+  }
+
+  .btn-dark { background: var(--ink); color: white; }
+  .btn-dark:hover { background: #1e2030; }
+
+  .btn-gold { background: var(--gold); color: var(--ink); }
+  .btn-gold:hover { background: #b8932e; }
+
+  .btn-danger { background: var(--danger-bg); color: var(--danger); border: 1px solid rgba(192,57,43,0.2); }
+  .btn-danger:hover { background: var(--danger); color: white; }
+
+  .btn-success { background: var(--success-bg); color: var(--success); border: 1px solid rgba(29,122,78,0.2); }
+  .btn-success:hover { background: var(--success); color: white; }
+
+  .btn-info { background: var(--info-bg); color: var(--info); border: 1px solid rgba(26,95,168,0.2); }
+  .btn-info:hover { background: var(--info); color: white; }
+
+  .btn-sm { padding: 6px 12px; font-size: 12px; }
+
+  /* TABLE */
+  .table-wrap { overflow-x: auto; }
+
+  table { width: 100%; border-collapse: collapse; }
+
+  thead th {
+    padding: 12px 20px;
+    text-align: left;
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: var(--muted);
+    background: var(--paper);
+    border-bottom: 1px solid var(--border);
+  }
+
+  tbody tr { border-bottom: 1px solid var(--border); transition: background 0.12s; }
+  tbody tr:last-child { border-bottom: none; }
+  tbody tr:hover { background: #faf8f4; }
+
+  td { padding: 14px 20px; font-size: 14px; color: var(--text); }
+
+  .issue-form { display: inline-flex; align-items: center; gap: 6px; }
+  .issue-input {
+    padding: 6px 10px; border: 1.5px solid var(--border); border-radius: 6px;
+    font-family: 'DM Sans', sans-serif; font-size: 13px; width: 130px; outline: none;
+    transition: border-color 0.2s;
+  }
+  .issue-input:focus { border-color: var(--gold); }
+
+  /* BADGE */
+  .badge {
+    display: inline-block; padding: 3px 8px; border-radius: 20px;
+    font-size: 11px; font-weight: 600; letter-spacing: 0.3px;
+  }
+  .badge-qty { background: var(--gold-light); color: #8a6200; }
+  .badge-zero { background: var(--danger-bg); color: var(--danger); }
+
+  /* CHART */
+  .chart-wrap {
+    padding: 24px;
+    height: 260px;
+  }
+
+  .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
+</style>
+</head>
+<body>
+
+<!-- SIDEBAR -->
+<aside class="sidebar">
+  <div class="sidebar-brand">
+    <div class="brand-icon">📚</div>
+    <span class="brand-name">LibraFlow</span>
+  </div>
+
+  <nav class="sidebar-nav">
+    <div class="nav-label">Main</div>
+    <a href="/dashboard" class="nav-link active">
+      <span class="nav-icon">🏠</span> Dashboard
+    </a>
+    <a href="/issued" class="nav-link">
+      <span class="nav-icon">📋</span> Issued Books
+    </a>
+    <a href="/overdue" class="nav-link">
+      <span class="nav-icon">⚠️</span> Overdue
+    </a>
+
+    <div class="nav-label" style="margin-top:10px;">Management</div>
+    <a href="/admin" class="nav-link">
+      <span class="nav-icon">⚙️</span> Admin Panel
+    </a>
+    <a href="/export" class="nav-link">
+      <span class="nav-icon">📤</span> Export CSV
+    </a>
+  </nav>
+
+  <div class="sidebar-footer">
+    <a href="/logout" class="nav-link logout">
+      <span class="nav-icon">🚪</span> Logout
+    </a>
+  </div>
+</aside>
+
+<!-- MAIN CONTENT -->
+<main class="main">
+
+  <div class="page-header">
+    <div>
+      <div class="page-title">Dashboard</div>
+      <div class="page-sub">Manage your library catalog</div>
+    </div>
+  </div>
+
+  <!-- STATS -->
+  <div class="stats-grid">
+    <div class="stat-card">
+      <div class="stat-card-label">Total Books</div>
+      <span class="stat-card-icon">📚</span>
+      <div class="stat-card-num">{{total}}</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-card-label">Catalog Entries</div>
+      <span class="stat-card-icon">📑</span>
+      <div class="stat-card-num">{{ books|length }}</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-card-label">Status</div>
+      <span class="stat-card-icon">✅</span>
+      <div class="stat-card-num" style="font-size:20px;margin-top:8px;">Active</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-card-label">Quick Links</div>
+      <div style="margin-top:8px; display:flex; flex-wrap:wrap; gap:6px;">
+        <a href="/issued" class="btn btn-info btn-sm">Issued</a>
+        <a href="/overdue" class="btn btn-danger btn-sm">Overdue</a>
+      </div>
+    </div>
+  </div>
+
+  <!-- SEARCH -->
+  <div class="section">
+    <div class="section-header">
+      <span class="section-title">Book Catalog</span>
+    </div>
+
+    <div class="search-bar">
+      <form action="/search" method="post" style="display:contents;">
+        <input name="search" class="search-input" placeholder="🔍  Search by title or author…">
+        <button class="btn btn-dark" type="submit">Search</button>
+      </form>
+    </div>
+
+    <!-- ADD FORM -->
+    <div class="add-form">
+      <form action="/add" method="post" style="display:contents;">
+        <div class="field-group">
+          <label>Book Title</label>
+          <input name="title" placeholder="e.g. The Alchemist" required style="width:200px;">
+        </div>
+        <div class="field-group">
+          <label>Author</label>
+          <input name="author" placeholder="e.g. Paulo Coelho" required style="width:180px;">
+        </div>
+        <div class="field-group">
+          <label>Quantity</label>
+          <input name="qty" placeholder="1" required style="width:80px;" type="number" min="1">
+        </div>
+        <button class="btn btn-gold" type="submit" style="margin-bottom:0; align-self:flex-end;">+ Add Book</button>
+      </form>
+    </div>
+
+    <!-- TABLE -->
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>Title</th>
+            <th>Author</th>
+            <th>Qty</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for b in books %}
+          <tr>
+            <td style="color:var(--muted); font-size:12px;">#{{ b[0] }}</td>
+            <td style="font-weight:500;">{{ b[1] }}</td>
+            <td style="color:var(--muted);">{{ b[2] }}</td>
+            <td>
+              <span class="badge {% if b[3] == 0 %}badge-zero{% else %}badge-qty{% endif %}">
+                {{ b[3] }}
+              </span>
+            </td>
+            <td>
+              <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
+                <a href="/delete/{{ b[0] }}" class="btn btn-danger btn-sm">Delete</a>
+
+                <form action="/issue/{{ b[0] }}" method="post" class="issue-form">
+                  <input name="student" class="issue-input" placeholder="Student name" required>
+                  <button class="btn btn-gold btn-sm" type="submit">Issue</button>
+                </form>
+
+                <a href="/return/{{ b[0] }}" class="btn btn-success btn-sm">Return</a>
+              </div>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- CHART -->
+  <div class="two-col">
+    <div class="section">
+      <div class="section-header">
+        <span class="section-title">Inventory Overview</span>
+      </div>
+      <div class="chart-wrap">
+        <canvas id="chart"></canvas>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section-header">
+        <span class="section-title">Quick Actions</span>
+      </div>
+      <div style="padding:24px; display:flex; flex-direction:column; gap:10px;">
+        <a href="/issued" class="btn btn-info" style="justify-content:center;">📋 View All Issued Books</a>
+        <a href="/overdue" class="btn btn-danger" style="justify-content:center;">⚠️ Check Overdue Books</a>
+        <a href="/export" class="btn btn-dark" style="justify-content:center;">📤 Export as CSV</a>
+        <a href="/admin" class="btn btn-gold" style="justify-content:center;">⚙️ Admin Panel</a>
+      </div>
+    </div>
+  </div>
+
+</main>
+
+<script>
+const labels = [{% for b in books %}'{{ b[1][:20] }}'{% if not loop.last %},{% endif %}{% endfor %}];
+const qtys = [{% for b in books %}{{ b[3] }}{% if not loop.last %},{% endif %}{% endfor %}];
+
+new Chart(document.getElementById("chart"), {
+  type: 'bar',
+  data: {
+    labels: labels.length ? labels : ['No books yet'],
+    datasets: [{
+      label: 'Copies Available',
+      data: qtys.length ? qtys : [0],
+      backgroundColor: '#c9a84c',
+      borderRadius: 6,
+      borderSkipped: false,
+    }]
+  },
+  options: {
+    responsive: true,
+    maintainAspectRatio: false,
+    plugins: { legend: { display: false } },
+    scales: {
+      x: { grid: { display: false }, ticks: { font: { family: 'DM Sans', size: 11 }, color: '#7a7a8a' } },
+      y: { grid: { color: '#f0ece4' }, ticks: { font: { family: 'DM Sans', size: 11 }, color: '#7a7a8a', stepSize: 1 }, beginAtZero: true }
+    }
+  }
+});
+</script>
+
+</body>
+</html>
