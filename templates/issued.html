@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>LibraFlow — Issued Books</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --ink: #0f1117; --paper: #f7f4ef; --gold: #c9a84c; --gold-light: #f5edda;
+    --text: #2a2a35; --muted: #7a7a8a; --border: #e0dbd2; --white: #ffffff;
+    --danger: #c0392b; --danger-bg: #fdf0ee;
+    --success: #1d7a4e; --success-bg: #edf7f2;
+    --info: #1a5fa8; --info-bg: #edf3fc;
+    --sidebar-w: 240px;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: 'DM Sans', sans-serif; background: var(--paper); color: var(--text); display: flex; min-height: 100vh; }
+  .sidebar { width: var(--sidebar-w); background: var(--ink); display: flex; flex-direction: column; position: fixed; top: 0; left: 0; bottom: 0; z-index: 100; }
+  .sidebar-brand { padding: 28px 24px 20px; border-bottom: 1px solid rgba(255,255,255,0.08); display: flex; align-items: center; gap: 10px; }
+  .brand-icon { width: 34px; height: 34px; background: var(--gold); border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 16px; }
+  .brand-name { font-family: 'DM Serif Display', serif; color: white; font-size: 18px; }
+  .sidebar-nav { padding: 20px 12px; flex: 1; display: flex; flex-direction: column; gap: 2px; }
+  .nav-label { font-size: 10px; text-transform: uppercase; letter-spacing: 1.5px; color: rgba(255,255,255,0.28); padding: 10px 12px 6px; }
+  .nav-link { display: flex; align-items: center; gap: 10px; padding: 10px 12px; border-radius: 8px; color: rgba(255,255,255,0.55); text-decoration: none; font-size: 14px; font-weight: 500; transition: background 0.15s, color 0.15s; }
+  .nav-link:hover { background: rgba(255,255,255,0.08); color: white; }
+  .nav-link.active { background: var(--gold); color: var(--ink); font-weight: 600; }
+  .nav-icon { font-size: 16px; width: 20px; text-align: center; }
+  .sidebar-footer { padding: 16px 12px; border-top: 1px solid rgba(255,255,255,0.08); }
+  .nav-link.logout { color: rgba(255,100,100,0.7); }
+  .nav-link.logout:hover { background: rgba(192,57,43,0.15); color: #ff6b6b; }
+  .main { margin-left: var(--sidebar-w); flex: 1; padding: 36px 40px; }
+  .page-header { margin-bottom: 32px; }
+  .page-title { font-family: 'DM Serif Display', serif; font-size: 32px; color: var(--ink); letter-spacing: -0.5px; }
+  .page-sub { color: var(--muted); font-size: 14px; margin-top: 4px; }
+  .section { background: var(--white); border: 1px solid var(--border); border-radius: 16px; overflow: hidden; }
+  .section-header { padding: 20px 24px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; }
+  .section-title { font-size: 15px; font-weight: 600; color: var(--ink); }
+  .table-wrap { overflow-x: auto; }
+  table { width: 100%; border-collapse: collapse; }
+  thead th { padding: 12px 20px; text-align: left; font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 1px; color: var(--muted); background: var(--paper); border-bottom: 1px solid var(--border); }
+  tbody tr { border-bottom: 1px solid var(--border); transition: background 0.12s; }
+  tbody tr:last-child { border-bottom: none; }
+  tbody tr:hover { background: #faf8f4; }
+  td { padding: 15px 20px; font-size: 14px; color: var(--text); }
+  .btn { padding: 9px 18px; border-radius: 8px; border: none; font-family: 'DM Sans', sans-serif; font-size: 13px; font-weight: 600; cursor: pointer; text-decoration: none; display: inline-flex; align-items: center; gap: 6px; transition: all 0.15s; }
+  .btn-gold { background: var(--gold); color: var(--ink); }
+  .btn-gold:hover { background: #b8932e; }
+  .badge { display: inline-block; padding: 3px 10px; border-radius: 20px; font-size: 11px; font-weight: 600; }
+  .badge-active { background: var(--info-bg); color: var(--info); }
+  .badge-overdue { background: var(--danger-bg); color: var(--danger); }
+  .empty-state { padding: 60px 24px; text-align: center; color: var(--muted); }
+  .empty-state .emoji { font-size: 40px; display: block; margin-bottom: 12px; }
+</style>
+</head>
+<body>
+
+<aside class="sidebar">
+  <div class="sidebar-brand">
+    <div class="brand-icon">📚</div>
+    <span class="brand-name">LibraFlow</span>
+  </div>
+  <nav class="sidebar-nav">
+    <div class="nav-label">Main</div>
+    <a href="/dashboard" class="nav-link"><span class="nav-icon">🏠</span> Dashboard</a>
+    <a href="/issued" class="nav-link active"><span class="nav-icon">📋</span> Issued Books</a>
+    <a href="/overdue" class="nav-link"><span class="nav-icon">⚠️</span> Overdue</a>
+    <div class="nav-label" style="margin-top:10px;">Management</div>
+    <a href="/admin" class="nav-link"><span class="nav-icon">⚙️</span> Admin Panel</a>
+    <a href="/export" class="nav-link"><span class="nav-icon">📤</span> Export CSV</a>
+  </nav>
+  <div class="sidebar-footer">
+    <a href="/logout" class="nav-link logout"><span class="nav-icon">🚪</span> Logout</a>
+  </div>
+</aside>
+
+<main class="main">
+  <div class="page-header">
+    <div class="page-title">Issued Books</div>
+    <div class="page-sub">Books currently checked out by students</div>
+  </div>
+
+  <div class="section">
+    <div class="section-header">
+      <span class="section-title">Active Loans — {{ data|length }} record{% if data|length != 1 %}s{% endif %}</span>
+      <a href="/dashboard" class="btn btn-gold">← Back to Dashboard</a>
+    </div>
+
+    {% if data %}
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>Book Title</th>
+            <th>Student</th>
+            <th>Issue Date</th>
+            <th>Due Date</th>
+            <th>Status</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for b in data %}
+          <tr>
+            <td style="color:var(--muted);font-size:12px;">{{ loop.index }}</td>
+            <td style="font-weight:500;">{{ b[0] }}</td>
+            <td>{{ b[1] }}</td>
+            <td style="color:var(--muted);">{{ b[2] }}</td>
+            <td style="color:var(--muted);">{{ b[3] }}</td>
+            <td><span class="badge badge-active">Active</span></td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% else %}
+    <div class="empty-state">
+      <span class="emoji">📭</span>
+      No books are currently issued.
+    </div>
+    {% endif %}
+  </div>
+</main>
+
+</body>
+</html>
