@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>LibraFlow — Admin Panel</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --ink: #0f1117; --paper: #f7f4ef; --gold: #c9a84c; --gold-light: #f5edda;
+    --text: #2a2a35; --muted: #7a7a8a; --border: #e0dbd2; --white: #ffffff;
+    --danger: #c0392b; --danger-bg: #fdf0ee;
+    --success: #1d7a4e; --success-bg: #edf7f2;
+    --info: #1a5fa8; --info-bg: #edf3fc;
+    --sidebar-w: 240px;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: 'DM Sans', sans-serif; background: var(--paper); color: var(--text); display: flex; min-height: 100vh; }
+  .sidebar { width: var(--sidebar-w); background: var(--ink); display: flex; flex-direction: column; position: fixed; top: 0; left: 0; bottom: 0; z-index: 100; }
+  .sidebar-brand { padding: 28px 24px 20px; border-bottom: 1px solid rgba(255,255,255,0.08); display: flex; align-items: center; gap: 10px; }
+  .brand-icon { width: 34px; height: 34px; background: var(--gold); border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 16px; }
+  .brand-name { font-family: 'DM Serif Display', serif; color: white; font-size: 18px; }
+  .sidebar-nav { padding: 20px 12px; flex: 1; display: flex; flex-direction: column; gap: 2px; }
+  .nav-label { font-size: 10px; text-transform: uppercase; letter-spacing: 1.5px; color: rgba(255,255,255,0.28); padding: 10px 12px 6px; }
+  .nav-link { display: flex; align-items: center; gap: 10px; padding: 10px 12px; border-radius: 8px; color: rgba(255,255,255,0.55); text-decoration: none; font-size: 14px; font-weight: 500; transition: background 0.15s, color 0.15s; }
+  .nav-link:hover { background: rgba(255,255,255,0.08); color: white; }
+  .nav-link.active { background: var(--gold); color: var(--ink); font-weight: 600; }
+  .nav-icon { font-size: 16px; width: 20px; text-align: center; }
+  .sidebar-footer { padding: 16px 12px; border-top: 1px solid rgba(255,255,255,0.08); }
+  .nav-link.logout { color: rgba(255,100,100,0.7); }
+  .nav-link.logout:hover { background: rgba(192,57,43,0.15); color: #ff6b6b; }
+  .main { margin-left: var(--sidebar-w); flex: 1; padding: 36px 40px; }
+  .page-header { margin-bottom: 32px; }
+  .page-title { font-family: 'DM Serif Display', serif; font-size: 32px; color: var(--ink); letter-spacing: -0.5px; }
+  .page-sub { color: var(--muted); font-size: 14px; margin-top: 4px; }
+  .stats-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-bottom: 32px; }
+  .stat-card { background: var(--white); border: 1px solid var(--border); border-radius: 14px; padding: 24px; }
+  .stat-card-label { font-size: 12px; color: var(--muted); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 10px; }
+  .stat-card-num { font-family: 'DM Serif Display', serif; font-size: 40px; color: var(--ink); }
+  .stat-card-icon { font-size: 24px; float: right; }
+  .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
+  .section { background: var(--white); border: 1px solid var(--border); border-radius: 16px; overflow: hidden; }
+  .section-header { padding: 20px 24px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; }
+  .section-title { font-size: 15px; font-weight: 600; color: var(--ink); }
+  .user-list { padding: 8px 0; }
+  .user-item { display: flex; align-items: center; gap: 12px; padding: 12px 24px; border-bottom: 1px solid var(--border); transition: background 0.1s; }
+  .user-item:last-child { border-bottom: none; }
+  .user-item:hover { background: #faf8f4; }
+  .user-avatar { width: 36px; height: 36px; background: var(--gold-light); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 14px; font-weight: 700; color: #8a6200; flex-shrink: 0; }
+  .user-name { font-size: 14px; font-weight: 500; }
+  .user-role { font-size: 11px; color: var(--muted); margin-top: 1px; }
+  .badge { display: inline-block; padding: 2px 8px; border-radius: 20px; font-size: 11px; font-weight: 600; margin-left: auto; }
+  .badge-admin { background: var(--gold-light); color: #8a6200; }
+  .badge-user { background: #f0f0f5; color: var(--muted); }
+  .btn { padding: 9px 18px; border-radius: 8px; border: none; font-family: 'DM Sans', sans-serif; font-size: 13px; font-weight: 600; cursor: pointer; text-decoration: none; display: inline-flex; align-items: center; gap: 6px; transition: all 0.15s; }
+  .btn-gold { background: var(--gold); color: var(--ink); }
+  .btn-gold:hover { background: #b8932e; }
+  .info-row { display: flex; justify-content: space-between; align-items: center; padding: 14px 24px; border-bottom: 1px solid var(--border); font-size: 14px; }
+  .info-row:last-child { border-bottom: none; }
+  .info-label { color: var(--muted); }
+  .info-value { font-weight: 600; }
+</style>
+</head>
+<body>
+
+<aside class="sidebar">
+  <div class="sidebar-brand">
+    <div class="brand-icon">📚</div>
+    <span class="brand-name">LibraFlow</span>
+  </div>
+  <nav class="sidebar-nav">
+    <div class="nav-label">Main</div>
+    <a href="/dashboard" class="nav-link"><span class="nav-icon">🏠</span> Dashboard</a>
+    <a href="/issued" class="nav-link"><span class="nav-icon">📋</span> Issued Books</a>
+    <a href="/overdue" class="nav-link"><span class="nav-icon">⚠️</span> Overdue</a>
+    <div class="nav-label" style="margin-top:10px;">Management</div>
+    <a href="/admin" class="nav-link active"><span class="nav-icon">⚙️</span> Admin Panel</a>
+    <a href="/export" class="nav-link"><span class="nav-icon">📤</span> Export CSV</a>
+  </nav>
+  <div class="sidebar-footer">
+    <a href="/logout" class="nav-link logout"><span class="nav-icon">🚪</span> Logout</a>
+  </div>
+</aside>
+
+<main class="main">
+  <div class="page-header">
+    <div class="page-title">Admin Panel</div>
+    <div class="page-sub">System overview and user management</div>
+  </div>
+
+  <div class="stats-grid">
+    <div class="stat-card">
+      <div class="stat-card-label">Total Books</div>
+      <span class="stat-card-icon">📚</span>
+      <div class="stat-card-num">{{ books }}</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-card-label">Registered Users</div>
+      <span class="stat-card-icon">👥</span>
+      <div class="stat-card-num">{{ total_users }}</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-card-label">System Status</div>
+      <span class="stat-card-icon">🟢</span>
+      <div class="stat-card-num" style="font-size:20px; margin-top:8px; color: var(--success);">Healthy</div>
+    </div>
+  </div>
+
+  <div class="two-col">
+    <div class="section">
+      <div class="section-header">
+        <span class="section-title">Registered Users</span>
+        <span style="font-size:12px; color:var(--muted);">{{ total_users }} total</span>
+      </div>
+      <div class="user-list">
+        {% for u in users %}
+        <div class="user-item">
+          <div class="user-avatar">{{ u[0][0]|upper }}</div>
+          <div>
+            <div class="user-name">{{ u[0] }}</div>
+            <div class="user-role">Library member</div>
+          </div>
+          {% if u[0] == 'admin' %}
+          <span class="badge badge-admin">Admin</span>
+          {% else %}
+          <span class="badge badge-user">User</span>
+          {% endif %}
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+
+    <div>
+      <div class="section" style="margin-bottom:20px;">
+        <div class="section-header">
+          <span class="section-title">System Info</span>
+        </div>
+        <div class="info-row">
+          <span class="info-label">Database</span>
+          <span class="info-value">SQLite</span>
+        </div>
+        <div class="info-row">
+          <span class="info-label">Fine Rate</span>
+          <span class="info-value">₹5 / day</span>
+        </div>
+        <div class="info-row">
+          <span class="info-label">Loan Period</span>
+          <span class="info-value">7 days</span>
+        </div>
+        <div class="info-row">
+          <span class="info-label">Total Books in DB</span>
+          <span class="info-value">{{ books }}</span>
+        </div>
+      </div>
+
+      <div class="section">
+        <div class="section-header">
+          <span class="section-title">Quick Actions</span>
+        </div>
+        <div style="padding:20px; display:flex; flex-direction:column; gap:10px;">
+          <a href="/dashboard" class="btn btn-gold" style="justify-content:center;">← Return to Dashboard</a>
+          <a href="/export" class="btn" style="background:#f0f0f5;color:var(--text);justify-content:center;">📤 Export Book Catalog</a>
+        </div>
+      </div>
+    </div>
+  </div>
+</main>
+
+</body>
+</html>
